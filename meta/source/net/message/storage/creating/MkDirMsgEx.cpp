@@ -167,7 +167,9 @@ std::unique_ptr<MkDirMsgEx::ResponseState> MkDirMsgEx::mkDirPrimary(ResponseCont
          if (!parentDefaultACL.empty())
          {
             // Note: This modifies the mode bits as well as the ACL itself.
-            FhgfsOpsErr modeRes = parentDefaultACL.modifyModeBits(mode, needsACL);
+            int rawMode = mode | umask;
+            FhgfsOpsErr modeRes = parentDefaultACL.modifyModeBits(rawMode, needsACL);
+            mode = rawMode;
             setMode(mode, 0);
 
             if (modeRes != FhgfsOpsErr_SUCCESS)

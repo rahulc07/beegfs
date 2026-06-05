@@ -896,7 +896,14 @@ FhgfsOpsErr MetaStore::mkNewMetaFile(DirInode& dir, MkFileDetails* mkDetails,
             if (!defaultACL.empty())
             {
                // Note: This modifies mkDetails->mode as well as the ACL.
-               FhgfsOpsErr modeRes = defaultACL.modifyModeBits(mkDetails->mode, needsACL);
+               // POSIX 1003.1e/ umask manpage
+               /* "Alternatively, if the parent directory has a default ACL (see
+               acl(5)), the umask is ignored, the default ACL is inherited, the
+               permission bits are set based on the inherited ACL, and permission
+               bits absent in the mode argument are turned off." */
+               int rawMode = mkDetails->mode | mkDetails->umask;
+               FhgfsOpsErr modeRes = defaultACL.modifyModeBits(rawMode, needsACL);
+               mkDetails->mode = rawMode;
 
                if (modeRes != FhgfsOpsErr_SUCCESS)
                   return modeRes;
